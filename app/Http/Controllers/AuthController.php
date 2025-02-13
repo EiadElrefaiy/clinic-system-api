@@ -87,7 +87,7 @@ class AuthController extends Controller
         DB::reconnect('mysql');
     
         $request->validate([
-            'license' => 'required|string|exists:subscriptions,license_number'
+            'license' => 'required|string'
         ]);
     
         $user = Auth::user();
@@ -95,16 +95,10 @@ class AuthController extends Controller
     
         // ✅ التحقق من صلاحية الترخيص
         if (!$subscription || $subscription->license_number !== $request->license || $subscription->expiry_date < now()) {
-            return response()->json(['error' => 'Invalid or expired license'], 403);
+            return response()->json(['license_verified' => false ,'error' => 'Invalid or expired license'], 403);
         }
-    
-        // ✅ إصدار توكن جديد مؤكد
-        $newToken = JWTAuth::claims(['verified_license' => true])->fromUser($user);
-    
+        
         return response()->json([
-            'token' => $newToken,
-            'user' => $user,
-            'subscription' => $subscription,
             'license_verified' => true
         ]);
     }
